@@ -106,7 +106,7 @@ def predict(data, model):
     return model.predict(data)
 
 def evaluate(test, model):
-
+    return 0
 
 
 def main():
