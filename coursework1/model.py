@@ -44,11 +44,11 @@ def preprocessData(data, labelsRow = None):
     
     # Extract features and labels
     features = data # Features
-    train_labels = None
+    labels = None
     # If lables are provided
     if (labelsRow):
         features = features.drop(data.columns[labelsRow], axis=1) # Features
-        train_labels = data.iloc[:, labelsRow].values # Labels
+        labels = data.iloc[:, labelsRow].values # Labels
 
     processed_features = []
 
@@ -56,15 +56,15 @@ def preprocessData(data, labelsRow = None):
     for patientInfo in features.values:
         # Clip the end of the rows by removing NaN values
         isNan = pd.isna(patientInfo)
-        cleaned_data = [x for x, nan in zip(patientInfo, isNan) if not nan]
+        Nan_removed_data = [x for x, nan in zip(patientInfo, isNan) if not nan]
         #Add patient to the featurs
-        processed_features.append(processPatientData(cleaned_data))
+        processed_features.append(processPatientData(Nan_removed_data))
 
-    # Normalize features if needed
+    # Normalize features
     scaler = StandardScaler()
     processed_features = scaler.fit_transform(processed_features)
     
-    return processed_features, train_labels
+    return processed_features, labels
 
 def train(train_features, train_labels):
 
@@ -110,6 +110,8 @@ def main():
     model = train(train_features, train_labels)
 
     #Predict and evaluate
+
+    #If the test data comes with labels, evaluate
     evaluation = 'aki' in testData.columns
 
     if evaluation:
@@ -124,7 +126,6 @@ def main():
     #Evaluate
     if evaluation:
         scores = evaluate(test_labels, test_predicted)
-
         print("f3 score: ", scores)
     
     # Write to files
