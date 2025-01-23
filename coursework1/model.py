@@ -2,34 +2,11 @@
 
 import argparse
 import csv
-import random
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier  # Use RandomForestRegressor for regression tasks
-from sklearn.metrics import accuracy_score, classification_report  # Adjust metrics for regression if needed
-from sklearn.preprocessing import StandardScaler  # Optional: Use for normalization if necessary
-
-# # Step 4: Make predictions
-# y_pred = model.predict(X_test)
-
-# # Step 5: Evaluate the model
-# # Classification metrics
-# print("Accuracy:", accuracy_score(y_test, y_pred))
-# print("Classification Report:\n", classification_report(y_test, y_pred))
-
-# # For regression tasks, you can use metrics like Mean Squared Error (MSE)
-# # from sklearn.metrics import mean_squared_error
-# # print("MSE:", mean_squared_error(y_test, y_pred))
-
-# # Step 6: (Optional) Save the model for future use
-# import joblib
-# joblib.dump(model, 'random_forest_model.pkl')
-
-# # To load the model later:
-# # model = joblib.load('random_forest_model.pkl')
-
-# # Done!
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import fbeta_score
+from sklearn.preprocessing import StandardScaler
 
 def processPatientData(patientInfo):
     processed_patient = []
@@ -89,8 +66,6 @@ def preprocessData(data, labelsRow = None):
     
     return processed_features, train_labels
 
-
-
 def train(train_features, train_labels):
 
     # Initialize and train the Random Forest model
@@ -105,30 +80,58 @@ def predict(data, model):
     '''
     return model.predict(data)
 
-def evaluate(test, model):
-    return 0
+def evaluate(real_labels, predicted_labels):
+    f3_score = fbeta_score(real_labels, predicted_labels, beta=3, average='weighted')
+    return f3_score
 
 
 def main():
-    #inport
-    data = pd.read_csv("training.csv")
-    # Get features and labels
-    train_features, train_labels = preprocessData(data, labelsRow=2)
-    # Train the model
-    model = train(train_features, train_labels)
-
-    
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", default="test.csv")
     parser.add_argument("--output", default="aki.csv")
     flags = parser.parse_args()
     r = csv.reader(open(flags.input))
+    headers = next(r)
+    #Add to array to convert to pandas df
+    testData = []
+    for line in r:
+        testData.append(line)
+    #Convert to pandas df
+    testData = pd.DataFrame(testData, columns=headers)
+    testData.replace('', np.nan, inplace=True)
+
+    #Train the model
+
+    #import training data
+    trainingData = pd.read_csv("training.csv")
+    # Get features and labels
+    train_features, train_labels = preprocessData(trainingData, labelsRow=2)
+    # Train the model
+    model = train(train_features, train_labels)
+
+    #Predict and evaluate
+    evaluation = 'aki' in testData.columns
+
+    if evaluation:
+        labels_index = testData.columns.get_loc('aki')  # Get the index
+        test_features, test_labels = preprocessData(testData, labelsRow=labels_index)
+    else:
+        test_features, = preprocessData(testData)
+    
+    # Predict values
+    test_predicted = predict(test_features, model)
+
+    #Evaluate
+    if evaluation:
+        scores = evaluate(test_labels, test_predicted)
+
+        print("f3 score: ", scores)
+    
+    # Write to files
     w = csv.writer(open(flags.output, "w"))
     w.writerow(("aki",))
-    next(r) # skip headers
-    for line in r:
-        # TODO: Implement a better model
-        w.writerow((random.choice(["y", "n"]),))
+    for line in test_predicted:
+        w.writerow(line)
 
 if __name__ == "__main__":
     main()
