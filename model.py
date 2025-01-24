@@ -118,7 +118,7 @@ def main():
         labels_index = testData.columns.get_loc('aki')  # Get the index
         test_features, test_labels = preprocessData(testData, labelsRow=labels_index)
     else:
-        test_features, = preprocessData(testData)
+        test_features, test_labels = preprocessData(testData)
     
     # Predict values
     test_predicted = predict(test_features, model)
