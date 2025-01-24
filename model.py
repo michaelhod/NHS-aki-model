@@ -87,7 +87,7 @@ def evaluate(real_labels, predicted_labels):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", default="/data/test.csv")
+    parser.add_argument("--input", default="test.csv")
     parser.add_argument("--output", default="aki.csv")
     flags = parser.parse_args()
     r = csv.reader(open(flags.input))
@@ -103,7 +103,7 @@ def main():
     #Train the model
 
     #import training data
-    trainingData = pd.read_csv("/data/training.csv")
+    trainingData = pd.read_csv("training.csv")
     # Get features and labels
     train_features, train_labels = preprocessData(trainingData, labelsRow=2)
     # Train the model
